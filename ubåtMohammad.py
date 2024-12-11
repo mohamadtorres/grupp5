@@ -34,3 +34,6 @@ def create_submarine_file(output_file="uboat.txt", map_width=10, map_height=10):
         for sub in submarines:
             f.write(f"{sub[0]},{sub[1]},{sub[2]},{sub[3]},{sub[4]}\n")
     print(f"Ubåtsdata sparad till {output_file}")
+
+
+create_submarine_file()
