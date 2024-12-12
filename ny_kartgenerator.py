@@ -17,7 +17,7 @@ def generate_map_with_rocks(width, height, output_file="underground.txt"):
                 row.append('x')  # Yttre ram
             else:
                 # Slumpmässigt välj mellan 'x', '0', och 'B'
-                cell = random.choices(['x', '0', 'B'], weights=[0.2, 0.7, 0.1])[0]
+                cell = random.choices(['X', '0', 'B'], weights=[0.2, 0.7, 0.1])[0]
                 row.append(cell)
         grid.append(row)
 
@@ -44,8 +44,8 @@ def add_rocks_with_values(grid):
                 value = int(input("Ange antal missiler som krävs för att rensa stenröset: "))
 
                 # Kontrollera att positionen är giltig och inte redan upptagen för man kan bara ha på platser som har 0
-                if grid[y][x] == '0':  # Endast tomma platser
-                    grid[y][x] = str(value)  # Sätt stenrös med värdet
+                if grid[y][x] == '0':  
+                    grid[y][x] = str(value) 
                     print(f"Stenrös placerat på ({x}, {y}) med värdet {value}.")
                     break
                 else:
