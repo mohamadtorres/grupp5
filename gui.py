@@ -10,7 +10,6 @@ pygame.display.set_caption("Menu")
 BG = pygame.image.load("img/Bakgrund.png")
 start_img = pygame.image.load("img/Start.png")
 
-
 font = pygame.font.Font("Font/Jersey10-Regular.ttf", 55)
 input_font = pygame.font.Font("Font/Jersey10-Regular.ttf", 30)
 
@@ -31,18 +30,70 @@ class Button():
         else:
             SCREEN.blit(self.image, (self.rect.x, self.rect.y))
 
+
+
+class Map():
+    def __init__(self):
+        self.width = 0
+        self.height = 0
+        self.square_width = 0
+        self.square_height = 0
+        self.sten_img = pygame.image.load("img/sten.png").convert_alpha()
+        self.resized_image = None
+
+
+    def read_map(self):
+        with open("underground.txt") as r:
+            for line in r:
+                line = line.replace(',', '') 
+                width = len(line.strip())
+                self.width = max(self.width, width) 
+                self.height += 1
+
+        self.square_width = 1080 // self.width  
+        self.square_height = 720 // self.height  
+
+        self.resized_image = pygame.transform.scale(self.sten_img, (self.square_width, self.square_height))
+        
+
+    def draw_map(self):
+        with open("underground.txt") as r:
+            y_cord = 0
+            for line in r: 
+                line = line.replace(',', '') 
+                x_cord = 200  
+                for char in line:
+                    if char == "X": 
+                        SCREEN.blit(self.resized_image, (x_cord, y_cord))
+                    x_cord += self.square_width
+                y_cord += self.square_height
+
+
+
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     SCREEN.blit(img, (x,y))
 
+
 def start():
+    game_rect = pygame.Rect(200, 0, 1080, 720)
+    menu_bar_rect = pygame.Rect(0, 0, 200, 720)
+    map = Map()
+    map.read_map()
+
     pygame.display.set_caption('Game')
+
     while True:
-        SCREEN.fill("Blue")
+        SCREEN.fill((200, 200, 200), menu_bar_rect)  
+        SCREEN.fill((0, 0, 255), game_rect)  
+
+        map.draw_map()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
         pygame.display.update()
 
 def main_menu():
@@ -55,6 +106,7 @@ def main_menu():
     start_button = Button(200, 200, start_img, 0.25)
     pygame.display.set_caption('Menu')
     while True:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -63,8 +115,11 @@ def main_menu():
                 if input_rect_x.collidepoint(event.pos):
                     active_x = True
                 elif start_button.rect.collidepoint(event.pos):
-                    if 9 < int(user_input_x) < 201:
+                    if len(user_input_x) == 0:
+                        start()
+                    elif 9 < int(user_input_x) < 201:
                         kart_generator(int(user_input_x), int(user_input_x))
+                        start()
                     else:
                         print("Fuck")
                 else:
