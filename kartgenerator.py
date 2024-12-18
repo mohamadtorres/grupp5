@@ -29,4 +29,4 @@ def kart_generator(width, height, output_file="underground.txt"):
 
     print(f"Kartan har sparats till {output_file}!")
 # Använd kartgeneratorn
-kart_generator(100, 100)  # Generera en 10x10 karta
+kart_generator(10, 10)  # Generera en 10x10 karta
