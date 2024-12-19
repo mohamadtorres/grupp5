@@ -1,5 +1,5 @@
 import pygame, sys
-from kartgenerator import kart_generator
+#from kartgenerator import kart_generator
 
 pygame.init()
 
