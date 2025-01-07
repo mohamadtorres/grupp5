@@ -118,7 +118,7 @@ def main_menu():
                     if len(user_input_x) == 0:
                         start()
                     elif 9 < int(user_input_x) < 201:
-                        kart_generator(int(user_input_x), int(user_input_x))
+                        #kart_generator(int(user_input_x), int(user_input_x))
                         start()
                     else:
                         print("Fuck")
