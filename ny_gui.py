@@ -70,6 +70,58 @@ class Map:
         self.stenrös_resized = pygame.transform.scale(stenrös_img, (self.square_width, self.square_height))
         self.load_submarines()
 
+
+        def move_submarines(self):
+            for sub in self.submarines:
+                x, y = sub["current"]
+                ex, ey = sub["end"]
+
+                if (x, y) == (ex, ey):
+                    continue  # If submarine is already at the destination, skip
+
+                # BFS to find shortest path
+                queue = deque([(x, y)])
+                visited = set([(x, y)])
+                parent = { (x, y): None }
+
+                found = False
+                while queue and not found:
+                    cx, cy = queue.popleft()
+                    for nx, ny in [(cx, cy - 1), (cx, cy + 1), (cx - 1, cy), (cx + 1, cy)]:
+                        if 0 <= nx < self.width and 0 <= ny < self.height:
+                            if (nx, ny) not in visited:
+                                cell = self.get_cell(nx, ny)
+                                if cell == "0":  # Free path
+                                    queue.append((nx, ny))
+                                    visited.add((nx, ny))
+                                    parent[(nx, ny)] = (cx, cy)
+                                    if (nx, ny) == (ex, ey):
+                                        found = True
+                                        break
+                                elif cell.isdigit() and int(cell) > 0 and sub["missiles"] > 0:  # Stenrös
+                                    queue.append((nx, ny))
+                                    visited.add((nx, ny))
+                                    parent[(nx, ny)] = (cx, cy)
+
+                # Trace path back to move step-by-step
+                if found:
+                    path = []
+                    step = (ex, ey)
+                    while step:
+                        path.append(step)
+                        step = parent[step]
+                    path.reverse()
+
+                    next_step = path[1]  # Move to the next step in the path
+                    if self.get_cell(*next_step) == "0":
+                        sub["current"] = next_step
+                    elif self.get_cell(*next_step).isdigit() and int(self.get_cell(*next_step)) > 0 and sub["missiles"] > 0:
+                        self.update_cell(*next_step, "0")
+                        sub["missiles"] -= 1
+                        sub["current"] = next_step
+
+
+
     def move_submarines(self):
         for sub in self.submarines:
             x, y = sub["current"]
@@ -169,7 +221,7 @@ def start():
                 sys.exit()
 
         pygame.display.update()
-        clock.tick(10)  # Uppdatera spelet 10 gånger per sekund
+        clock.tick(1)  # Uppdatera spelet 10 gånger per sekund
 
 class Button():
     def __init__(self, x, y, image, scale):
