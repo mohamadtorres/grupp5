@@ -1,7 +1,9 @@
 import os
 import pygame
 import sys
+import math
 from collections import deque
+
 pygame.init()
 
 SCREEN = pygame.display.set_mode((1280, 720))
@@ -75,33 +77,55 @@ class Map:
             x, y = sub["current"]
             ex, ey = sub["end"]
 
-            surroundings = {
-                "up": (x, y - 1),
-                "down": (x, y + 1),
-                "left": (x - 1, y),
-                "right": (x + 1, y),
-            }
+            # Om ubåten redan är vid sitt mål
+            if (x, y) == (ex, ey):
+                print(f"Ubåt vid ({x}, {y}) har nått sitt mål.")
+                continue
 
-            # Prioritera rörelse mot slutdestination
-            moved = False
-            for direction, (nx, ny) in surroundings.items():
+            # Pathfinding med BFS
+            path = self.find_path((x, y), (ex, ey), sub["missiles"])
+            if path:
+                next_step = path[1]  # Nästa steg i vägen
+                sub["current"] = next_step
+            else:
+                print(f"Ubåt vid ({x}, {y}) kunde inte hitta en väg till målet.")
+
+    def find_path(self, start, end, missiles):
+        """Hittar en väg från start till slut med BFS."""
+        queue = deque([(start, [])])  # Håll reda på position och väg
+        visited = set()  # Håll reda på besökta positioner
+        visited.add(start)
+
+        while queue:
+            (current, path) = queue.popleft()
+            cx, cy = current
+
+            # Om vi har nått slutdestinationen
+            if current == end:
+                return path + [end]
+
+            # Skanna omgivningen
+            for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Upp, Ner, Vänster, Höger
+                nx, ny = cx + dx, cy + dy
+
+                if (nx, ny) in visited:
+                    continue
+
                 cell = self.get_cell(nx, ny)
 
                 if cell == "0":  # Fri väg
-                    sub["current"] = (nx, ny)
-                    moved = True
-                    break
+                    queue.append(((nx, ny), path + [current]))
+                    visited.add((nx, ny))
                 elif cell.isdigit() and int(cell) > 0:  # Stenrös
-                    if sub["missiles"] > 0:
+                    if missiles > 0:  # Använd en missil
                         self.update_cell(nx, ny, "0")
-                        sub["missiles"] -= 1
-                        sub["current"] = (nx, ny)
-                        moved = True
-                        break
+                        queue.append(((nx, ny), path + [current]))
+                        visited.add((nx, ny))
+                        missiles -= 1
+                elif cell == "x":  # Vägg
+                    continue  # Gå inte till väggar
 
-            # Om ingen rörelse är möjlig, stanna kvar
-            if not moved:
-                print(f"Ubåt vid {sub['current']} kunde inte röra sig.")
+        return None  # Ingen väg hittades
 
     def draw_map(self):
         with open("underground.txt") as r:
