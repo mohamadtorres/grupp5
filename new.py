@@ -288,7 +288,7 @@
 
 
 # main_menu()
-
+from heapq import heappush, heappop
 import os
 import pygame
 import sys
@@ -374,30 +374,33 @@ class Map:
                 print(f"Ubåt vid ({x}, {y}) har nått sitt mål.")
                 continue  # Ubåten har redan nått sitt mål
 
-            # BFS för att hitta kortaste väg
-            queue = deque([(x, y)])
+            # A*-liknande BFS för att hitta kortaste väg
+            queue = []
+            heappush(queue, (0, x, y))
             visited = set([(x, y)])
             parent = {(x, y): None}
 
             found = False
             while queue and not found:
-                cx, cy = queue.popleft()
+                _, cx, cy = heappop(queue)
                 for nx, ny in [(cx, cy - 1), (cx, cy + 1), (cx - 1, cy), (cx + 1, cy)]:
                     if (nx, ny) not in visited and 0 <= nx < self.width and 0 <= ny < self.height:
                         cell = self.get_cell(nx, ny)
                         if cell == "0":  # Fri väg
-                            queue.append((nx, ny))
+                            priority = abs(ex - nx) + abs(ey - ny)  # Manhattan-avstånd
+                            heappush(queue, (priority, nx, ny))
                             visited.add((nx, ny))
                             parent[(nx, ny)] = (cx, cy)
                             if (nx, ny) == (ex, ey):
                                 found = True
                                 break
                         elif cell.isdigit() and int(cell) > 0 and sub["missiles"] > 0:  # Stenrös
-                            queue.append((nx, ny))
-                            visited.add((nx, ny))
-                            parent[(nx, ny)] = (cx, cy)
                             sub["missiles"] -= 1  # Använd en missil
                             self.update_cell(nx, ny, "0")  # Ta bort stenröset
+                            priority = abs(ex - nx) + abs(ey - ny)
+                            heappush(queue, (priority, nx, ny))
+                            visited.add((nx, ny))
+                            parent[(nx, ny)] = (cx, cy)
 
             # Om en väg hittades
             if found:
@@ -411,7 +414,8 @@ class Map:
                 if len(path) > 1:
                     sub["current"] = path[1]  # Flytta till nästa steg
             else:
-                print(f"Ubåt vid ({x}, {y}) kunde inte hitta en väg till målet.")
+                print(f"Ubåt vid ({x}, {y}) kunde inte hitta en väg till målet ({ex}, {ey}).")
+                print(f"Blockerad av hinder eller otillräckliga missiler.")
 
     def find_path(self, start, end, missiles):
         """Hittar en väg från start till slut med BFS."""
@@ -467,6 +471,14 @@ class Map:
         for sub in self.submarines:
             x, y = sub["current"]
             SCREEN.blit(self.submarine_resized, (200 + x * self.square_width, y * self.square_height))
+        
+        # for sub in self.submarines:
+        #     ex, ey = sub["end"]
+        #     pygame.draw.rect(
+        #         SCREEN,
+        #         (255, 0, 0),  # Röd färg för målet
+        #         pygame.Rect(200 + ex * self.square_width, ey * self.square_height, self.square_width, self.square_height),
+        #     )
 
     def place_submarines(self):
         if not os.path.exists("uboat.txt"):
