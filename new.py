@@ -525,7 +525,7 @@ def start():
                 sys.exit()
 
         pygame.display.update()
-        clock.tick(5)  # Uppdatera spelet 10 gånger per sekund
+        clock.tick(2)  # Uppdatera spelet 2gånger per sekund
 
 class Button():
     def __init__(self, x, y, image, scale):
